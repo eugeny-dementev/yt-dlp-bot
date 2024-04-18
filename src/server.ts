@@ -68,6 +68,14 @@ function isValidShortURL(url: string) {
   }
 }
 
+function prepareYTDLCommand(userId: number, url: string): string {
+  if (!homeDir) throw Error('No HOME_DIR specified');
+
+  const userHomeDir = path.join(homeDir, String(userId));
+
+  return `yt-dlp --paths home:${userHomeDir} --paths temp:/${swapDir} ${url}`
+}
+
 /*
 URL {
   href: 'https://youtube.com/shorts/23owdgVAV5k?si=fSGa2TFVepKT7gia',
