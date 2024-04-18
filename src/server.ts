@@ -1,12 +1,14 @@
+import path from 'path';
 import { Telegraf } from 'telegraf';
 import { message } from 'telegraf/filters';
 
-const swapDir = process.env.SWAP_DIR
+const swapDir = process.env.SWAP_DIR;
+const homeDir = process.env.HOME_DIR;
 
 const bot = new Telegraf(process.env.BOT_TOKEN as string);
 
-bot.start((ctx) => ctx.reply('Welcome to Tasks-bot'));
-bot.help((ctx) => ctx.reply('Send me a message and I\'ll add a task for you'));
+bot.start((ctx) => ctx.reply('Welcome to Shorts Saver Bot'));
+bot.help((ctx) => ctx.reply('Send me a short video and I\'ll public it '));
 
 const publishersIds = String(process.env.PUBLISHERS_IDS)
   .split(',')
