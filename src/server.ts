@@ -58,7 +58,7 @@ function isValidShortURL(url: string) {
 
     console.log('new link:', l);
 
-    if (!/shorts\/[a-zA-Z0-9]{11}/.test(url)) {
+    if (!/shorts\/[a-zA-Z0-9\-_]{11}/.test(url)) {
       return false;
     }
 
