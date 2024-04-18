@@ -1,0 +1,32 @@
+{
+  "name": "tasks-bot",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "scripts": {
+    "compile": "tsc --project ./tsconfig.json",
+    "watch": "tsc --watch --project ./tsconfig.json",
+    "server": "node --enable-source-maps ./built/server.js",
+    "server:dev": "nodemon ./built/server.js",
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/eugeny-dementev/tasks-bot.git"
+  },
+  "keywords": [],
+  "author": "Eugeny Dementev",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/eugeny-dementev/tasks-bot/issues"
+  },
+  "homepage": "https://github.com/eugeny-dementev/tasks-bot#readme",
+  "devDependencies": {
+    "@tsconfig/node20": "^20.1.2",
+    "@types/node": "^20.11.26"
+  },
+  "dependencies": {
+    "telegraf": "^4.16.3",
+    "typescript": "^5.4.2"
+  }
+}
