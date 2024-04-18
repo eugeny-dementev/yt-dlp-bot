@@ -1,6 +1,7 @@
 import path from 'path';
 import { Telegraf } from 'telegraf';
 import { message } from 'telegraf/filters';
+import shelljs from 'shelljs'
 
 const swapDir = process.env.SWAP_DIR;
 const homeDir = process.env.HOME_DIR;
@@ -42,7 +43,11 @@ bot.on(message('text'), async (ctx) => {
     return;
   }
 
-  ctx.reply('Link processing');
+  const command = prepareYTDLCommand(message.from.id, message.text);
+
+  shelljs.exec(command);
+
+  ctx.reply('short downloaded')
 });
 
 bot.launch();
