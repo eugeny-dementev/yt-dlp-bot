@@ -2,5 +2,7 @@ node_modules/
 built/
 dev.ps1
 docker.ps1
+redoc.ps1
 dev.sh
 docker.sh
+redoc.sh
