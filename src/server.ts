@@ -33,11 +33,14 @@ const allowedUsers = new Set([
 
 bot.use(async (ctx, next) => {
   const userId = ctx.message?.from.id || 0;
+  const chatId = ctx.message?.chat.id || 0;
 
   if (allowedUsers.has(userId)) await next();
   else console.log('blocked user: ', {
-    userId,
     user: ctx.message?.from.username,
+    userId,
+    chatId,
+    update: ctx.update,
   });
 });
 
