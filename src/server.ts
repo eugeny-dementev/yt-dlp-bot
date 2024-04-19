@@ -50,16 +50,18 @@ bot.on(message('text'), async (ctx) => {
 
   console.log('message', message);
 
-  if (!isValidShortURL(message.text)) {
-    ctx.reply('only a link to the short youtube video');
+  let url = '';
+  if (isValidShortURL(message.text) || isValidRedditURL(message.text)) {
+    url = getCleanURL(message.text);
+  } else {
+    ctx.reply('only a link to the short youtube video or reddit videos');
 
     return;
   }
 
-  const command = prepareYTDLCommand(userId, message.text);
+  const command = prepareYTDLCommand(userId, url);
 
   shelljs.exec(command);
-
 
   const pattern = path.join(homeDir, String(userId), '*');
   console.log('pattern:', pattern);
@@ -95,9 +97,7 @@ process.once('SIGTERM', () => bot.stop('SIGTERM'));
 
 function isValidShortURL(url: string) {
   try {
-    const l = new URL(url);
-
-    console.log('new link:', l);
+    new URL(url);
 
     if (!/shorts\/[a-zA-Z0-9\-_]{11}/.test(url)) {
       return false;
@@ -108,15 +108,6 @@ function isValidShortURL(url: string) {
     return false;
   }
 }
-
-function prepareYTDLCommand(userId: number, url: string): string {
-  if (!homeDir) throw Error('No HOME_DIR specified');
-
-  const userHomeDir = path.join(homeDir, String(userId));
-
-  return `yt-dlp --paths home:${userHomeDir} --paths temp:/${swapDir} ${url}`
-}
-
 /*
 URL {
   href: 'https://youtube.com/shorts/23owdgVAV5k?si=fSGa2TFVepKT7gia',
@@ -133,3 +124,65 @@ URL {
   hash: ''
 }
 */
+
+function isValidRedditURL(url: string) {
+  try {
+    const l = new URL(url);
+
+    if (!/reddit\.com/.test(l.hostname)) {
+      return false;
+    }
+
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+/*
+URL {
+  href: 'https://www.reddit.com/r/nextfuckinglevel/s/TSLgGuuAbd',
+  origin: 'https://www.reddit.com',
+  protocol: 'https:',
+  username: '',
+  password: '',
+  host: 'www.reddit.com',
+  hostname: 'www.reddit.com',
+  port: '',
+  pathname: '/r/nextfuckinglevel/s/TSLgGuuAbd',
+  search: '',
+  searchParams: URLSearchParams {},
+  hash: ''
+}
+URL {
+  href: 'https://www.reddit.com/r/ANormalDayInRussia/comments/1c75t2q/russian_spiderman/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button',
+  origin: 'https://www.reddit.com',
+  protocol: 'https:',
+  username: '',
+  password: '',
+  host: 'www.reddit.com',
+  hostname: 'www.reddit.com',
+  port: '',
+  pathname: '/r/ANormalDayInRussia/comments/1c75t2q/russian_spiderman/',
+  search: '?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button',
+  searchParams: URLSearchParams {
+    'utm_source' => 'share',
+    'utm_medium' => 'web3x',
+    'utm_name' => 'web3xcss',
+    'utm_term' => '1',
+    'utm_content' => 'share_button' },
+  hash: ''
+}
+*/
+function getCleanURL(url: string) {
+  const l = new URL(url);
+
+  return `${l.origin}${l.pathname}`;
+}
+
+function prepareYTDLCommand(userId: number, url: string): string {
+  if (!homeDir) throw Error('No HOME_DIR specified');
+
+  const userHomeDir = path.join(homeDir, String(userId));
+
+  return `yt-dlp --paths home:${userHomeDir} --paths temp:/${swapDir} --output "%(id)s.%(ext)s" ${url}`;
+}
