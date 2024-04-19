@@ -5,7 +5,6 @@ import { message } from 'telegraf/filters';
 import shelljs from 'shelljs';
 import { glob } from 'glob';
 import fs from 'fs';
-import { log } from 'console';
 import { readFile } from 'fs/promises';
 
 const swapDir = process.env.SWAP_DIR;
@@ -63,34 +62,40 @@ bot.on(message('text'), async (ctx) => {
 
   shelljs.exec(command);
 
-  const pattern = path.join(homeDir, String(userId), '*');
-  console.log('pattern:', pattern);
-  const files = glob.sync(pattern, { windowsPathsNoEscape: true });
-  console.log('files:', files);
-
-  if (files.length === 0) {
-    ctx.reply('No video found');
-    return;
-  }
-
   if (channelId) {
-    const newestFile = files
-      .map(name => ({ name, ctime: fs.statSync(name).ctime }))
-      .sort((a: { ctime: Date }, b: { ctime: Date }): number => b.ctime.getTime() - a.ctime.getTime())[0].name
+    let lastFileFullPath = getLastFile(userId);
 
-    log('newestFile:', newestFile);
-
-    if (!newestFile) {
+    if (lastFileFullPath === null) {
       console.log('No file was found');
       ctx.reply('No video found');
       return;
     }
 
-    const videoFile = await readFile(newestFile);
+    if (/\.webm$/.test(lastFileFullPath)) {
+      const toMp4Command = prepareWebmToMp4Command(lastFileFullPath);
+      shelljs.exec(toMp4Command);
 
-    await bot.telegram.sendVideo(channelId, { source: videoFile });
+      await deleteAsync(lastFileFullPath);
 
-    await deleteAsync(newestFile, { force: true });
+      console.log('webm files converted successfully');
+
+      lastFileFullPath = getLastFile(userId);
+    }
+
+    if (!lastFileFullPath) {
+      ctx.reply('No video found');
+      return;
+    }
+
+    const videoDimensions = getVideoDimensions(lastFileFullPath);
+
+    console.log('VideoDimensions extracted:', videoDimensions);
+
+    const videoFile = await readFile(lastFileFullPath);
+
+    await bot.telegram.sendVideo(channelId, { source: videoFile }, videoDimensions);
+
+    await deleteAsync(lastFileFullPath, { force: true });
   }
 
   ctx.reply('short downloaded')
@@ -191,5 +196,52 @@ function prepareYTDLCommand(userId: number, url: string): string {
 
   const userHomeDir = path.join(homeDir, String(userId));
 
-  return `yt-dlp --paths home:${userHomeDir} --paths temp:/${swapDir} --output "%(id)s.%(ext)s" ${url}`;
+  return `yt-dlp --paths home:${userHomeDir} --paths temp:${swapDir} --output "%(id)s.%(ext)s" ${url}`;
+}
+
+function getLastFile(userId: number): string | null {
+  if (!homeDir) throw new Error('No home dir found');
+
+  const pattern = path.join(homeDir, String(userId), '*');
+  console.log('pattern:', pattern);
+  const files = glob.sync(pattern, { windowsPathsNoEscape: true });
+  console.log('files:', files);
+
+  if (files.length === 0) {
+    return null;
+  }
+
+  return files
+    .map(name => ({ name, ctime: fs.statSync(name).ctime }))
+    .sort((a: { ctime: Date }, b: { ctime: Date }): number => b.ctime.getTime() - a.ctime.getTime())[0].name
+}
+
+function prepareWebmToMp4Command(filePath: string) {
+  const fileData = path.parse(filePath);
+  const newFilePath = path.join(fileData.dir, `${fileData.name}.mp4`);
+  // D:\shorts\2843386\gh3dehtc9xuc1.mp4
+  // ffmpeg -i ./YKUNMpHk_cs.webm -codec copy ./YKUNMpHk_cs.mp4
+  return `ffmpeg -i ${filePath} -codec copy ${newFilePath}`;
+}
+
+type VideoDimensions = { width: number, height: number };
+function getVideoDimensions(filePath: string): VideoDimensions {
+  // ffprobe -v error -show_entries stream=width,height -of default=noprint_wrappers=1 .\YKUNMpHk_cs.mp4
+  // returns two lines:
+  // width=720
+  // height=1280
+  const command = `ffprobe -v error -show_entries stream=width,height -of default=noprint_wrappers=1 ${filePath}`
+
+  const response = shelljs.exec(command);
+
+  return response
+    .trim()
+    .split('\n').map(s => s.trim())
+    .map((str: string): string[] => str.split('=').map(s => s.trim()))
+    .reduce<VideoDimensions>((obj: VideoDimensions, pair: string[]): VideoDimensions => {
+      const [field, value] = pair;
+      obj[field] = Number(value);
+
+      return obj;
+    }, {} as VideoDimensions);
 }
