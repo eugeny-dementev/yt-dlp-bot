@@ -7,6 +7,14 @@ import { glob } from 'glob';
 import fs from 'fs';
 import { readFile } from 'fs/promises';
 
+type Timestampt = ReturnType<typeof Date.now>;
+
+// Users cannot post more then once per 1 hour
+const usersPostsLimit: Record<number, Timestampt> = {
+}
+
+const HOUR_IN_MS = 1000 * 60 * 60;
+
 const swapDir = process.env.SWAP_DIR;
 const homeDir = process.env.HOME_DIR;
 
@@ -47,6 +55,11 @@ bot.on(message('text'), async (ctx) => {
   const message = ctx.message;
   const userId = message.from.id;
 
+  if (userId !== adminId && usersPostsLimit[userId] && Date.now() - usersPostsLimit[userId] < HOUR_IN_MS) {
+    ctx.reply('Last post was less then an hour ago');
+    return;
+  }
+
   console.log('message', message);
 
   let url = '';
@@ -58,6 +71,8 @@ bot.on(message('text'), async (ctx) => {
     return;
   }
 
+  usersPostsLimit[userId] = Date.now();
+
   const command = prepareYTDLCommand(userId, url);
 
   shelljs.exec(command);
@@ -65,9 +80,12 @@ bot.on(message('text'), async (ctx) => {
   if (channelId) {
     let lastFileFullPath = getLastFile(userId);
 
+    console.log('lastFileFullPath:', lastFileFullPath);
+
     if (lastFileFullPath === null) {
-      console.log('No file was found');
+      delete usersPostsLimit[userId];
       ctx.reply('No video found');
+
       return;
     }
 
@@ -82,8 +100,10 @@ bot.on(message('text'), async (ctx) => {
       lastFileFullPath = getLastFile(userId);
     }
 
-    if (!lastFileFullPath) {
+    if (lastFileFullPath === null) {
+      delete usersPostsLimit[userId];
       ctx.reply('No video found');
+
       return;
     }
 
@@ -219,7 +239,6 @@ function getLastFile(userId: number): string | null {
 function prepareWebmToMp4Command(filePath: string) {
   const fileData = path.parse(filePath);
   const newFilePath = path.join(fileData.dir, `${fileData.name}.mp4`);
-  // D:\shorts\2843386\gh3dehtc9xuc1.mp4
   // ffmpeg -i ./YKUNMpHk_cs.webm ./YKUNMpHk_cs.mp4
   return `ffmpeg -i ${filePath} ${newFilePath}`;
 }
@@ -227,7 +246,6 @@ function prepareWebmToMp4Command(filePath: string) {
 type VideoDimensions = { width: number, height: number };
 function getVideoDimensions(filePath: string): VideoDimensions {
   // ffprobe -v error -show_entries stream=width,height -of default=noprint_wrappers=1 .\YKUNMpHk_cs.mp4
-  // returns two lines:
   // width=720
   // height=1280
   const command = `ffprobe -v error -show_entries stream=width,height -of default=noprint_wrappers=1 ${filePath}`
