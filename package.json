@@ -27,6 +27,7 @@
   },
   "dependencies": {
     "@types/shelljs": "^0.8.15",
+    "del": "^7.1.0",
     "glob": "^10.3.12",
     "shelljs": "^0.8.5",
     "telegraf": "^4.16.3",
