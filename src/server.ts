@@ -1,13 +1,17 @@
 import path from 'path';
+import { deleteAsync } from 'del';
 import { Telegraf } from 'telegraf';
 import { message } from 'telegraf/filters';
 import shelljs from 'shelljs';
 import { glob } from 'glob';
 import fs from 'fs';
 import { log } from 'console';
+import { readFile } from 'fs/promises';
 
 const swapDir = process.env.SWAP_DIR;
 const homeDir = process.env.HOME_DIR;
+
+const channelId = Number(process.env.CHANNEL_ID);
 
 if (!homeDir || !swapDir) throw new Error('SWAP_DIR and HOME_DIR must be specified');
 
@@ -59,12 +63,23 @@ bot.on(message('text'), async (ctx) => {
   const files = glob.sync(pattern, { windowsPathsNoEscape: true });
   console.log('files:', files);
 
-  const newestFile = files
-    .map(name => ({ name, ctime: fs.statSync(name).ctime }))
-    .sort((a: { ctime: Date }, b: { ctime: Date }): number => b.ctime.getTime() - a.ctime.getTime())[0].name
+  if (channelId) {
+    const newestFile = files
+      .map(name => ({ name, ctime: fs.statSync(name).ctime }))
+      .sort((a: { ctime: Date }, b: { ctime: Date }): number => b.ctime.getTime() - a.ctime.getTime())[0].name
 
-  log('newestFile:', newestFile);
+    log('newestFile:', newestFile);
 
+    if (!newestFile) {
+      console.log('No file was found');
+    }
+
+    const videoFile = await readFile(newestFile);
+
+    await bot.telegram.sendVideo(channelId, { source: videoFile });
+
+    await deleteAsync(newestFile, { force: true });
+  }
 
   ctx.reply('short downloaded')
 });
