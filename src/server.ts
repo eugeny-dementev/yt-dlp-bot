@@ -68,6 +68,11 @@ bot.on(message('text'), async (ctx) => {
   const files = glob.sync(pattern, { windowsPathsNoEscape: true });
   console.log('files:', files);
 
+  if (files.length === 0) {
+    ctx.reply('No video found');
+    return;
+  }
+
   if (channelId) {
     const newestFile = files
       .map(name => ({ name, ctime: fs.statSync(name).ctime }))
@@ -77,6 +82,8 @@ bot.on(message('text'), async (ctx) => {
 
     if (!newestFile) {
       console.log('No file was found');
+      ctx.reply('No video found');
+      return;
     }
 
     const videoFile = await readFile(newestFile);
