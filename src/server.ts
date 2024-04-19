@@ -75,7 +75,7 @@ bot.on(message('text'), async (ctx) => {
       const toMp4Command = prepareWebmToMp4Command(lastFileFullPath);
       shelljs.exec(toMp4Command);
 
-      await deleteAsync(lastFileFullPath);
+      await deleteAsync(lastFileFullPath, { force: true });
 
       console.log('webm files converted successfully');
 
@@ -220,8 +220,8 @@ function prepareWebmToMp4Command(filePath: string) {
   const fileData = path.parse(filePath);
   const newFilePath = path.join(fileData.dir, `${fileData.name}.mp4`);
   // D:\shorts\2843386\gh3dehtc9xuc1.mp4
-  // ffmpeg -i ./YKUNMpHk_cs.webm -codec copy ./YKUNMpHk_cs.mp4
-  return `ffmpeg -i ${filePath} -codec copy ${newFilePath}`;
+  // ffmpeg -i ./YKUNMpHk_cs.webm ./YKUNMpHk_cs.mp4
+  return `ffmpeg -i ${filePath} ${newFilePath}`;
 }
 
 type VideoDimensions = { width: number, height: number };
