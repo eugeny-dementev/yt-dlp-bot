@@ -6,8 +6,49 @@ import shelljs from 'shelljs';
 import { glob } from 'glob';
 import fs from 'fs';
 import { readFile } from 'fs/promises';
+import { Queue } from 'async-queue-runner';
 
 type Timestampt = ReturnType<typeof Date.now>;
+
+/* Prototype of how short downloading queue should look like
+const messageHandlingQueue = [
+  util.if(({ url }) => isShorts(url) || isReddit(url), {
+    then: [
+      util.if(({ limits, userId }) => isLimited(limits, userId), {
+        then: [
+          notification('Your last request happened less then hour ago'),
+        ],
+        else: [
+          DownloadVideo,
+          GetLastFile,
+          util.valid(({ lastFile }) => isWebm(lastFile), [
+            ConvertWebmToMp4,
+            DeleteWebmFile,
+          ]),
+          UploadVideo,
+          notification('Video uploaded'),
+        ],
+      })
+    ],
+    else: [
+      notification('No valid URL link found')
+    ],
+  })
+];
+
+queueRunenr.run({
+  limits: UserLimits,
+  userId: number,
+  chatId: number,
+  url: string,
+  bot: TelegramBot,
+
+  // ctx: TelegramContext
+  // No context should be passed!
+  // Message should be replyied immedietly
+  // and then bot will send a seaprate message about parsing results
+});
+*/
 
 // Users cannot post more then once per 1 hour
 const usersPostsLimit: Record<number, Timestampt> = {
