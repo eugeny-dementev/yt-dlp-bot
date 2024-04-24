@@ -27,7 +27,9 @@
   },
   "dependencies": {
     "@types/shelljs": "^0.8.15",
+    "async-queue-runner": "^0.10.0",
     "del": "^7.1.0",
+    "expand-tilde": "^2.0.2",
     "glob": "^10.3.12",
     "shelljs": "^0.8.5",
     "telegraf": "^4.16.3",
