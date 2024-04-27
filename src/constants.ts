@@ -1,6 +1,6 @@
 import { Timestampt, UserRole } from "./types.js";
 
-export const FIVE_MINUTES_MS = 5 * 50 * 1000;
+export const FIVE_MINUTES_MS = 5 * 60 * 1000;
 export const ONE_HOUR_MS = 60 * 60 * 1000;
 export const ONE_SECOND_MS = 1 * 1000;
 
