@@ -51,7 +51,6 @@ export const shortHandlerQueue: () => QueueAction[] = () => [
           ExecuteCommand,
           ExtractVideoDimentions,
           Log,
-          shortcut.notify('Message processed'),
           util.if<BotContext>(({ channelId }) => Boolean(channelId), {
             then: [
               Log,
