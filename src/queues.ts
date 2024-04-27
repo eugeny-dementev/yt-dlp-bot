@@ -40,6 +40,7 @@ export const shortHandlerQueue: () => QueueAction[] = () => [
             then: [
               PrepareWebmToMp4Command,
               Log,
+              ExecuteCommand,
               DeleteLastFile,
               FindLastFile,
               Log,
