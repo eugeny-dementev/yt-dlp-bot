@@ -13,6 +13,7 @@ export type UserRoles = Record<number, UserRole>
 
 export type BotContext = {
   limitsStatus: UserLimitStatus
+  cookiesPath: string
   channelId: number
   userId: number
   chatId: number

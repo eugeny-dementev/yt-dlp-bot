@@ -12,3 +12,5 @@ export const publishersIds = String(process.env.PUBLISHERS_IDS)
   .map((id: string): number => parseInt(id))
 
 export const adminId = Number(process.env.ADMIN_ID);
+
+export const cookiesPath = process.env.COOKIES_PATH;

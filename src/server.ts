@@ -1,7 +1,7 @@
 import { QueueRunner } from 'async-queue-runner';
 import { Telegraf } from 'telegraf';
 import { message } from 'telegraf/filters';
-import { adminId, channelId, publishersIds, token } from './config.js';
+import { adminId, channelId, cookiesPath, publishersIds, token } from './config.js';
 import { rolesFactory } from './helpers.js';
 import { shortHandlerQueue } from './queues.js';
 import { UserLimitStatus } from './types.js';
@@ -47,6 +47,7 @@ bot.on(message('text'), async (ctx) => {
 
   const context = {
     limitsStatus,
+    cookiesPath,
     channelId,
     userId,
     chatId,
