@@ -11,7 +11,6 @@ import {
   Log,
   PreapreVideoDimentionsCommand,
   PrepareConvertCommand,
-  PrepareWebmToMp4Command,
   PrepareYtDlpCommand,
   SetChatIdToChannelId,
   SetLimitStatus,
@@ -19,7 +18,7 @@ import {
 } from "./actions.js";
 import { formatTime } from "./helpers.js";
 import { shortcut } from "./shortcuts.js";
-import { BotContext, LastFileContext, TimeLimitContext } from "./types.js";
+import { BotContext, TimeLimitContext } from "./types.js";
 import { isValidURL } from "./validators.js";
 
 export const shortHandlerQueue: () => QueueAction[] = () => [
@@ -73,7 +72,6 @@ export const shortHandlerQueue: () => QueueAction[] = () => [
       }),
     ],
     else: [
-      DeleteLimitStatus,
       shortcut.notify<TimeLimitContext>(({ timeLimitLeft }) => `${formatTime(timeLimitLeft)} left until next post`)
     ],
   }),
