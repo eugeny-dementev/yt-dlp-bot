@@ -1,5 +1,5 @@
 export function isValidURL(url: string) {
-  return isValidShortURL(url) || isValidRedditURL(url);
+  return isValidShortURL(url) || isValidRedditURL(url) || isValidReelURL(url);
 }
 
 /*
@@ -81,5 +81,32 @@ export function isValidRedditURL(url: string) {
   }
 }
 
-export function isUserPassLimit(limits, userId) {
+/*
+URL {
+  href: 'https://www.instagram.com/reel/C36ehY5LWFh/?igsh=MW9zdzQ3dGduMmNjZg==',
+  origin: 'https://www.instagram.com',
+  protocol: 'https:',
+  username: '',
+  password: '',
+  host: 'www.instagram.com',
+  hostname: 'www.instagram.com',
+  port: '',
+  pathname: '/reel/C36ehY5LWFh/',
+  search: '?igsh=MW9zdzQ3dGduMmNjZg==',
+  searchParams: URLSearchParams { 'igsh' => 'MW9zdzQ3dGduMmNjZg==' },
+  hash: ''
+}
+*/
+export function isValidReelURL(url: string) {
+  try {
+    new URL(url);
+
+    if (!/reel\/[a-zA-Z0-9\-_]{11}/.test(url)) {
+      return false;
+    }
+
+    return true;
+  } catch (e) {
+    return false;
+  }
 }
