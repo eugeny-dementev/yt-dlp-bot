@@ -42,3 +42,8 @@ export type VideoDimensionsContext = {
   width: number,
   height: number,
 };
+
+export type LinkType = 'reel' | 'short' | 'reddit'
+export type LinkTypeContext = {
+  type: LinkType,
+};

@@ -13,6 +13,7 @@ import {
   CommandContext,
   FContextMessage,
   LastFileContext,
+  LinkTypeContext,
   VideoDimensions,
   VideoDimensionsContext,
 } from './types.js';
@@ -93,14 +94,19 @@ export class CleanUpUrl extends Action<BotContext> {
   }
 }
 
-
-export class PrepareYtDlpCommand extends Action<BotContext> {
-  async execute({ url, extend, userId }: BotContext & QueueContext): Promise<void> {
+export class PrepareYtDlpCommand extends Action<LinkTypeContext & BotContext> {
+  async execute({ url, type, cookiesPath, extend, userId }: LinkTypeContext & BotContext & QueueContext): Promise<void> {
     if (!homeDir) throw Error('No HOME_DIR specified');
 
     const userHomeDir = path.join(homeDir, String(userId));
 
-    const command = `yt-dlp --paths home:${userHomeDir} --paths temp:${swapDir} --output "%(id)s.%(ext)s" ${url}`;
+    const commandArr: string[] = [];
+
+    commandArr.push(`yt-dlp --paths home:${userHomeDir} --paths temp:${swapDir}`);
+    if (type === 'reel' && cookiesPath) commandArr.push(`--cookies ${cookiesPath}`);
+    commandArr.push(`--output "%(id)s.%(ext)s" ${url}`);
+
+    const command = commandArr.join(' ');
 
     extend({ command });
   }

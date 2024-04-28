@@ -33,6 +33,7 @@ export const shortHandlerQueue: () => QueueAction[] = () => [
       util.if<BotContext>(({ url }) => isValidURL(url), {
         then: [
           GetLinkType,
+          Log,
           PrepareYtDlpCommand,
           Log,
           ExecuteCommand,
