@@ -147,17 +147,16 @@ export class RindLadstFile extends Action<BotContext> {
   }
 }
 
-export class PrepareWebmToMp4Command extends Action<LastFileContext> {
+export class PrepareConvertCommand extends Action<LastFileContext> {
   async execute({ lastFile, extend }: LastFileContext & QueueContext): Promise<void> {
     const fileData = path.parse(lastFile);
-    const newFilePath = path.join(fileData.dir, `${fileData.name}.mp4`);
-    // ffmpeg -i ./YKUNMpHk_cs.webm ./YKUNMpHk_cs.mp4
+    const newFilePath = path.join(fileData.dir, `new_${fileData.name}.mp4`);
+    // ffmpeg -i ./YKUNMpHk_cs.mp4 ./new_YKUNMpHk_cs.mp4
     const command = `ffmpeg -i ${lastFile} ${newFilePath}`;
 
     extend({ command });
   }
 }
-
 
 export class PreapreVideoDimentionsCommand extends Action<LastFileContext> {
   async execute({ lastFile, extend }: LastFileContext & QueueContext): Promise<void> {
