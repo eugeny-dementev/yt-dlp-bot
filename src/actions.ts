@@ -20,11 +20,13 @@ import {
 
 export class Notification<C> extends Action<BotContext> {
   message: string | FContextMessage<C & BotContext>;
+  silent: boolean;
 
-  constructor(message: string | FContextMessage<C & BotContext>) {
+  constructor(message: string | FContextMessage<C & BotContext>, silent: boolean = true) {
     super();
 
     this.message = message;
+    this.silent = silent;
   }
 
   async execute(context: C & BotContext & QueueContext): Promise<void> {
@@ -34,7 +36,7 @@ export class Notification<C> extends Action<BotContext> {
       ? await this.message(context)
       : this.message;
 
-    bot.telegram.sendMessage(chatId, msg);
+    bot.telegram.sendMessage(chatId, msg, { disable_notification: this.silent });
   }
 }
 
