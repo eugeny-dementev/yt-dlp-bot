@@ -7,6 +7,7 @@ import {
   ExecuteCommand,
   ExtractVideoDimentions,
   FindLastFile,
+  GetLinkType,
   Log,
   PreapreVideoDimentionsCommand,
   PrepareWebmToMp4Command,
@@ -31,6 +32,7 @@ export const shortHandlerQueue: () => QueueAction[] = () => [
       CleanUpUrl,
       util.if<BotContext>(({ url }) => isValidURL(url), {
         then: [
+          GetLinkType,
           PrepareYtDlpCommand,
           Log,
           ExecuteCommand,

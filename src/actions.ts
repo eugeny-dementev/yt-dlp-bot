@@ -7,7 +7,7 @@ import path from 'path';
 import shelljs from 'shelljs';
 import { homeDir, swapDir } from './config.js';
 import { USER_LIMITS } from './constants.js';
-import { omit } from './helpers.js';
+import { getLinkType, omit } from './helpers.js';
 import {
   BotContext,
   CommandContext,
@@ -52,6 +52,12 @@ export class CalcTimeLeft extends Action<BotContext> {
     if (timeLimitLeft <= 1000) timeLimitLeft = 0;
 
     extend({ timeLimitLeft });
+  }
+}
+
+export class GetLinkType extends Action<BotContext> {
+  async execute({ url, extend }: BotContext & QueueContext): Promise<void> {
+    extend({ type: getLinkType(url) });
   }
 }
 
