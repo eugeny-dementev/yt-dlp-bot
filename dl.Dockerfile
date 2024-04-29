@@ -12,4 +12,4 @@ RUN echo "deb [signed-by=/usr/share/keyrings/deb-multimedia.gpg] https://www.deb
 RUN apt update
 RUN apt install -y ffmpeg
 
-# docker build -f Dockerfile.dl --tag utils/dl
+# docker build -f dl.Dockerfile --tag utils/dl .
