@@ -1,5 +1,4 @@
 import { UserRole } from './types.js';
-import { isValidRedditURL, isValidReelURL, isValidShortURL } from './validators.js';
 
 export function rolesFactory(adminId: number, publishersIds: number[]) {
   const publishersIdsSet = new Set(publishersIds);
@@ -31,11 +30,4 @@ export function formatTime(milliseconds: number) {
 export function omit(obj: object, ...keys: string[]) {
   const entries = Object.entries(obj).filter(([key]) => !keys.includes(key));
   return Object.fromEntries(entries);
-}
-
-export function getLinkType(url: string): 'reel' | 'short' | 'reddit' | null {
-  if (isValidReelURL(url)) return 'reel';
-  if (isValidShortURL(url)) return 'short';
-  if (isValidRedditURL(url)) return 'reddit';
-  return null;
 }

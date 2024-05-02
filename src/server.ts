@@ -54,6 +54,7 @@ bot.on(message('text'), async (ctx) => {
     url,
     bot,
     role,
+    destFileName: queueRunner.getName(),
   };
 
   const queueName = `${userId}_${queueRunner.getName()}`;

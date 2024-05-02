@@ -7,13 +7,12 @@ import path from 'path';
 import shelljs from 'shelljs';
 import { homeDir, swapDir } from './config.js';
 import { USER_LIMITS } from './constants.js';
-import { getLinkType, omit } from './helpers.js';
+import { omit } from './helpers.js';
 import {
   BotContext,
   CommandContext,
   FContextMessage,
   LastFileContext,
-  LinkTypeContext,
   VideoDimensions,
   VideoDimensionsContext,
 } from './types.js';
@@ -58,12 +57,6 @@ export class CalcTimeLeft extends Action<BotContext> {
   }
 }
 
-export class GetLinkType extends Action<BotContext> {
-  async execute({ url, extend }: BotContext & QueueContext): Promise<void> {
-    extend({ type: getLinkType(url) });
-  }
-}
-
 export class SetLimitStatus extends Action<BotContext> {
   async execute(context: BotContext & QueueContext): Promise<void> {
     const { userId, limitsStatus } = context;
@@ -96,17 +89,18 @@ export class CleanUpUrl extends Action<BotContext> {
   }
 }
 
-export class PrepareYtDlpCommand extends Action<LinkTypeContext & BotContext> {
-  async execute({ url, type, cookiesPath, extend, userId }: LinkTypeContext & BotContext & QueueContext): Promise<void> {
+export class PrepareYtDlpCommand extends Action<BotContext> {
+  async execute({ url, title, cookiesPath, extend, userId, destFileName }: BotContext & QueueContext & { title: boolean }): Promise<void> {
     if (!homeDir) throw Error('No HOME_DIR specified');
 
     const userHomeDir = path.join(homeDir, String(userId));
 
     const commandArr: string[] = [];
 
-    commandArr.push(`yt-dlp -S "res:720" --paths home:${userHomeDir} --paths temp:${swapDir}`);
-    if (type === 'reel' && cookiesPath) commandArr.push(`--cookies ${cookiesPath}`);
-    commandArr.push(`--output "%(id)s.%(ext)s" ${url}`);
+    commandArr.push(`yt-dlp -S "res:480" --paths home:${userHomeDir} --paths temp:${swapDir}`);
+    commandArr.push(`--cookies ${cookiesPath}`);
+    if (title === false) commandArr.push(`--output "${destFileName}.%(ext)s"`);
+    commandArr.push(url);
 
     const command = commandArr.join(' ');
 
@@ -114,8 +108,8 @@ export class PrepareYtDlpCommand extends Action<LinkTypeContext & BotContext> {
   }
 }
 
-export class FindLastFile extends Action<BotContext> {
-  async execute({ userId, extend }: BotContext & QueueContext): Promise<void> {
+export class FindFile extends Action<BotContext> {
+  async execute({ userId, extend, destFileName }: BotContext & QueueContext): Promise<void> {
 
     if (!homeDir) throw new Error('No home dir found');
 
@@ -123,38 +117,28 @@ export class FindLastFile extends Action<BotContext> {
 
     if (homePath.includes('~')) homePath = expendTilda(homePath);
 
-    const pattern = path.join(homePath, String(userId), '*');
+    const pattern = path.join(homePath, String(userId), `${destFileName}.*`);
     const files = await glob.glob(pattern, { windowsPathsNoEscape: true });
 
     if (files.length === 0) {
       return;
     }
 
-    const filesStats = await Promise.all(files.map(async (name) => ({
-      name, ctime: (await fsPromises.stat(name)).ctime,
-    })))
+    const lastFile = files[0];
 
-    const lastFile = filesStats
-      .sort((a: { ctime: Date }, b: { ctime: Date }): number => b.ctime.getTime() - a.ctime.getTime())[0].name
-
-
-    extend({ lastFile });
-  }
-}
-
-export class RindLadstFile extends Action<BotContext> {
-  async execute(context: BotContext & QueueContext): Promise<void> {
+    extend({ globPattern: pattern, globFiles: files, lastFile });
   }
 }
 
 export class PrepareConvertCommand extends Action<LastFileContext> {
   async execute({ lastFile, extend }: LastFileContext & QueueContext): Promise<void> {
     const fileData = path.parse(lastFile);
-    const newFilePath = path.join(fileData.dir, `new_${fileData.name}.mp4`);
-    // ffmpeg -i ./YKUNMpHk_cs.mp4 ./new_YKUNMpHk_cs.mp4
-    const command = `ffmpeg -i ${lastFile} ${newFilePath}`;
+    const newFileName = `new_${fileData.name}`;
+    const newFilePath = path.join(fileData.dir, `${newFileName}.mp4`);
+    // ffmpeg -i ./YKUNMpHk_cs.any ./new_YKUNMpHk_cs.mp4
+    const command = `ffmpeg -i ${lastFile} -c:v libx264 -crf 28 -preset veryslow -c:a copy ${newFilePath}`;
 
-    extend({ command });
+    extend({ command, destFileName: newFileName });
   }
 }
 
@@ -217,7 +201,7 @@ export class ExecuteCommand extends Action<CommandContext> {
   }
 }
 
-export class DeleteLastFile extends Action<LastFileContext> {
+export class DeleteFile extends Action<LastFileContext> {
   async execute({ lastFile }: LastFileContext): Promise<void> {
     await deleteAsync(lastFile, { force: true });
   }

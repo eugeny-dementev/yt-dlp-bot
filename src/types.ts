@@ -20,6 +20,7 @@ export type BotContext = {
   url: string
   bot: Telegraf
   role: UserRole
+  destFileName: string
 }
 
 export type TimeLimitContext = {
