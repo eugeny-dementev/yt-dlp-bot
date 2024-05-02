@@ -5,7 +5,7 @@ import fsPromises from 'fs/promises';
 import { glob } from 'glob';
 import path from 'path';
 import shelljs from 'shelljs';
-import { homeDir, swapDir } from './config.js';
+import { homeDir, storageDir, swapDir } from './config.js';
 import { USER_LIMITS } from './constants.js';
 import { omit } from './helpers.js';
 import {
@@ -90,16 +90,18 @@ export class CleanUpUrl extends Action<BotContext> {
 }
 
 export class PrepareYtDlpCommand extends Action<BotContext> {
-  async execute({ url, title, cookiesPath, extend, userId, destFileName }: BotContext & QueueContext & { title: boolean }): Promise<void> {
-    if (!homeDir) throw Error('No HOME_DIR specified');
+  async execute({ url, destDir, cookiesPath, extend, userId, destFileName }: BotContext & QueueContext & { destDir: string }): Promise<void> {
+    if (!destDir) throw Error('No destDir specified');
 
-    const userHomeDir = path.join(homeDir, String(userId));
+    const userHomeDir = path.join(destDir, destDir == homeDir ? String(userId) : '');
 
     const commandArr: string[] = [];
 
-    commandArr.push(`yt-dlp -S "res:480" --paths home:${userHomeDir} --paths temp:${swapDir}`);
+    commandArr.push(`yt-dlp -S "res:${destDir === storageDir ? '1080' : '480'}"`)
+    commandArr.push(`--paths home:${userHomeDir}`)
+    commandArr.push(`--paths temp:${swapDir}`);
     commandArr.push(`--cookies ${cookiesPath}`);
-    if (title === false) commandArr.push(`--output "${destFileName}.%(ext)s"`);
+    if (destDir === homeDir) commandArr.push(`--output "${destFileName}.%(ext)s"`);
     commandArr.push(url);
 
     const command = commandArr.join(' ');

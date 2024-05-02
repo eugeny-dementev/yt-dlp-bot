@@ -19,6 +19,7 @@ import { formatTime } from "./helpers.js";
 import { shortcut } from "./shortcuts.js";
 import { BotContext, TimeLimitContext } from "./types.js";
 import { isValidURL } from "./validators.js";
+import { homeDir, storageDir } from "./config.js";
 
 export const shortHandlerQueue: () => QueueAction[] = () => [
   Log,
@@ -33,10 +34,12 @@ export const shortHandlerQueue: () => QueueAction[] = () => [
         then: [
           Log,
           shortcut.extend({ title: true }),
+          shortcut.extend({ destDir: storageDir }),
           PrepareYtDlpCommand,
           Log,
           ExecuteCommand,
           shortcut.extend({ title: false }),
+          shortcut.extend({ destDir: homeDir }),
           PrepareYtDlpCommand,
           Log,
           ExecuteCommand,
