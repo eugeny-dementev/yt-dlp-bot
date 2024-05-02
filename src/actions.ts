@@ -104,7 +104,7 @@ export class PrepareYtDlpCommand extends Action<LinkTypeContext & BotContext> {
 
     const commandArr: string[] = [];
 
-    commandArr.push(`yt-dlp --paths home:${userHomeDir} --paths temp:${swapDir}`);
+    commandArr.push(`yt-dlp -S "res:720" --paths home:${userHomeDir} --paths temp:${swapDir}`);
     if (type === 'reel' && cookiesPath) commandArr.push(`--cookies ${cookiesPath}`);
     commandArr.push(`--output "%(id)s.%(ext)s" ${url}`);
 
