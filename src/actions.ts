@@ -7,25 +7,26 @@ import path from 'path';
 import shelljs from 'shelljs';
 import { homeDir, storageDir, swapDir } from './config.js';
 import { USER_LIMITS } from './constants.js';
-import { omit } from './helpers.js';
+import { omit, parseFormatsListing } from './helpers.js';
 import {
   BotContext,
   CommandContext,
   FContextMessage,
   LastFileContext,
+  NotificationOptions,
   VideoDimensions,
   VideoDimensionsContext,
 } from './types.js';
 
 export class Notification<C> extends Action<BotContext> {
   message: string | FContextMessage<C & BotContext>;
-  silent: boolean;
+  options: NotificationOptions = { update: false, silent: true };
 
-  constructor(message: string | FContextMessage<C & BotContext>, silent: boolean = true) {
+  constructor(message: string | FContextMessage<C & BotContext>, options: Partial<NotificationOptions> = {}) {
     super();
 
     this.message = message;
-    this.silent = silent;
+    Object.assign(this.options, options);
   }
 
   async execute(context: C & BotContext & QueueContext): Promise<void> {
@@ -35,7 +36,7 @@ export class Notification<C> extends Action<BotContext> {
       ? await this.message(context)
       : this.message;
 
-    bot.telegram.sendMessage(chatId, msg, { disable_notification: this.silent });
+    bot.telegram.sendMessage(chatId, msg, { disable_notification: this.options.silent });
   }
 }
 
@@ -75,7 +76,8 @@ export class DeleteLimitStatus extends Action<BotContext> {
 
 export class Log extends Action<any> {
   async execute(context: any): Promise<void> {
-    console.log(`Log(${context.name()}) context:`, omit(context, 'bot', 'push', 'stop', 'extend', 'name', 'stdout'));
+    // console.log(`Log(${context.name()}) context:`, omit(context, 'bot', 'push', 'stop', 'extend', 'name', 'stdout'));
+    console.log(`Log(${context.name()}) context:`, omit(context, 'bot', 'push', 'stop', 'extend', 'name'));
   }
 }
 
@@ -86,6 +88,41 @@ export class CleanUpUrl extends Action<BotContext> {
     const cleanUrl = `${l.origin}${l.pathname}`;
 
     extend({ url: cleanUrl })
+  }
+}
+
+export class GetVideoFormatsListingCommand extends Action<BotContext> {
+  async execute({ url, cookiesPath, extend }: BotContext & QueueContext): Promise<void> {
+    const commandArr: string[] = [];
+
+    commandArr.push(`yt-dlp`)
+    commandArr.push('--list-formats')
+    commandArr.push(`--cookies ${cookiesPath}`);
+    commandArr.push(url);
+
+    const command = commandArr.join(' ');
+
+    extend({ command });
+  }
+}
+
+export class CheckVideoSize extends Action<CommandContext> {
+  async execute({ stdout, extend }: CommandContext & QueueContext): Promise<void> {
+    let videoMeta: ReturnType<typeof parseFormatsListing> = [];
+
+    try {
+      const metas = parseFormatsListing(stdout);
+
+      if (Array.isArray(metas) && metas.length > 0)
+
+      videoMeta = metas;
+
+    } catch (e) {
+      console.error(e);
+      console.log(stdout);
+    }
+
+    extend({ videoMeta });
   }
 }
 
@@ -102,11 +139,34 @@ export class PrepareYtDlpCommand extends Action<BotContext> {
     commandArr.push(`--paths temp:${swapDir}`);
     commandArr.push(`--cookies ${cookiesPath}`);
     if (destDir === homeDir) commandArr.push(`--output "${destFileName}.%(ext)s"`);
+    else commandArr.push(`--output "${destFileName}.%(title)s.%(ext)s"`);
     commandArr.push(url);
 
     const command = commandArr.join(' ');
 
     extend({ command });
+  }
+}
+
+export class FindMainFile extends Action<BotContext> {
+  async execute({ extend, destFileName }: BotContext & QueueContext): Promise<void> {
+
+    if (!storageDir) throw new Error('No storage dir found');
+
+    let homePath = storageDir;
+
+    if (homePath.includes('~')) homePath = expendTilda(homePath);
+
+    const pattern = path.join(homePath, `${destFileName}.*`);
+    const files = await glob.glob(pattern, { windowsPathsNoEscape: true });
+
+    if (files.length === 0) {
+      return;
+    }
+
+    const mainFile = files[0];
+
+    extend({ globPattern: pattern, globFiles: files, mainFile });
   }
 }
 

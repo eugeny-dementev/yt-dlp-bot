@@ -1,4 +1,5 @@
 import { Telegraf } from "telegraf"
+import { parseFormatsListing } from "./helpers.js";
 
 export type Timestampt = ReturnType<typeof Date.now>;
 
@@ -38,13 +39,26 @@ export type LastFileContext = {
   lastFile: string,
 }
 
+export type MainFileContext = {
+  mainFile: string,
+}
+
 export type VideoDimensions = { width: number, height: number };
 export type VideoDimensionsContext = {
   width: number,
   height: number,
 };
 
+export type VideoMetaContext = {
+  videoMeta: ReturnType<typeof parseFormatsListing>,
+}
+
 export type LinkType = 'reel' | 'short' | 'reddit'
 export type LinkTypeContext = {
   type: LinkType,
 };
+
+export type NotificationOptions = {
+  update: boolean
+  silent: boolean
+}
